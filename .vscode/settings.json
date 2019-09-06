@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "main.C": "cpp",
+        "memory": "cpp",
+        "queue": "cpp",
+        "tuple": "cpp",
+        "ViperApp.C": "cpp",
+        "ViperTestApp.C": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled",
+}
