@@ -5,7 +5,10 @@
         "queue": "cpp",
         "tuple": "cpp",
         "ViperApp.C": "cpp",
-        "ViperTestApp.C": "cpp"
+        "ViperTestApp.C": "cpp",
+        "VPStressDivergence.C": "cpp",
+        "VPMechMaterial.C": "cpp",
+        "VPViscoPlasticModel.C": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
 }
