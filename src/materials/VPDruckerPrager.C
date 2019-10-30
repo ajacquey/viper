@@ -62,7 +62,7 @@ void
 VPDruckerPrager<compute_stage>::preReturnMap()
 {
   _pressure_tr = -_stress_tr.trace() / 3.0;
-  _eqv_stress_tr = std::sqrt(3.0) * _stress_tr.deviatoric().L2norm();
+  _eqv_stress_tr = std::sqrt(1.5) * _stress_tr.deviatoric().L2norm();
 }
 
 template <ComputeStage compute_stage>
