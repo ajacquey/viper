@@ -13,7 +13,7 @@
 /******************************************************************************/
 
 #include "VPMechMaterial.h"
-#include "VPViscoPlasticModel.h"
+#include "VPViscoPlasticUpdate.h"
 
 registerADMooseObject("ViperApp", VPMechMaterial);
 
@@ -96,8 +96,9 @@ VPMechMaterial<compute_stage>::initialSetup()
   {
     MaterialName vp_model = getParam<MaterialName>("viscoplastic_model");
 
-    VPViscoPlasticModel<compute_stage> * vp_r = dynamic_cast<VPViscoPlasticModel<compute_stage> *>(
-        &this->template getMaterialByName<compute_stage>(vp_model));
+    VPViscoPlasticUpdate<compute_stage> * vp_r =
+        dynamic_cast<VPViscoPlasticUpdate<compute_stage> *>(
+            &this->template getMaterialByName<compute_stage>(vp_model));
 
     _vp_model = vp_r;
   }
@@ -201,8 +202,7 @@ VPMechMaterial<compute_stage>::computeQpStress()
   if (_has_vp)
   {
     _vp_model->setQp(_qp);
-    _vp_model->viscoPlasticUpdate(
-        _stress[_qp], _bulk_modulus, _shear_modulus, _elastic_strain_incr[_qp]);
+    _vp_model->viscoPlasticUpdate(_stress[_qp], _Cijkl, _elastic_strain_incr[_qp]);
   }
 }
 

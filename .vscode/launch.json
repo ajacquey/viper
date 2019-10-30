@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/viper-dbg",
-            "args": ["-i", "test/tests/kernels/simple_diffusion.i"],
+            "args": ["-i", "test/tests/kernels/viscoplastic/uniaxial.i"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

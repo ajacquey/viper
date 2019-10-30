@@ -23,7 +23,7 @@ class RankTwoTensorTempl;
 typedef RankTwoTensorTempl<Real> RankTwoTensor;
 typedef RankTwoTensorTempl<DualReal> DualRankTwoTensor;
 template <ComputeStage>
-class VPViscoPlasticModel;
+class VPViscoPlasticUpdate;
 
 declareADValidParams(VPMechMaterial);
 
@@ -72,7 +72,7 @@ protected:
   const MaterialProperty<RankTwoTensor> & _stress_old;
 
   // Viscoplastic model
-  VPViscoPlasticModel<compute_stage> * _vp_model;
+  VPViscoPlasticUpdate<compute_stage> * _vp_model;
 
   // Elasticity tensor
   RankFourTensor _Cijkl;

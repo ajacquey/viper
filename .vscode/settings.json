@@ -8,7 +8,10 @@
         "ViperTestApp.C": "cpp",
         "VPStressDivergence.C": "cpp",
         "VPMechMaterial.C": "cpp",
-        "VPViscoPlasticModel.C": "cpp"
+        "VPViscoPlasticModel.C": "cpp",
+        "VPSingleVarUpdate.C": "cpp",
+        "VPViscoPlasticUpdate.C": "cpp",
+        "VPDruckerPrager.C": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
 }

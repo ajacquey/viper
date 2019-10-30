@@ -12,25 +12,37 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#include "VPViscoPlasticModel.h"
+#pragma once
 
-defineADValidParams(VPViscoPlasticModel,
-                    ADMaterial,
-                    params.addClassDescription("Base class for the viscoplastic correction.");
-                    params.set<bool>("compute") = false;
-                    params.suppressParameter<bool>("compute"););
+#include "VPSingleVarUpdate.h"
 
-template <ComputeStage compute_stage>
-VPViscoPlasticModel<compute_stage>::VPViscoPlasticModel(const InputParameters & parameters)
-  : ADMaterial<compute_stage>(parameters)
-{
-}
+template <ComputeStage>
+class VPDruckerPrager;
+
+declareADValidParams(VPDruckerPrager);
 
 template <ComputeStage compute_stage>
-void
-VPViscoPlasticModel<compute_stage>::setQp(unsigned int qp)
+class VPDruckerPrager : public VPSingleVarUpdate<compute_stage>
 {
-  _qp = qp;
-}
+public:
+  VPDruckerPrager(const InputParameters & parameters);
 
-adBaseClass(VPViscoPlasticModel);
+protected:
+  virtual ADReal yieldFunction(const ADReal & gamma_vp) override;
+  virtual ADReal yieldFunctionDeriv(const ADReal & gamma_vp) override;
+  virtual void preReturnMap() override;
+  virtual void postReturnMap() override;
+  virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_vp) override;
+
+  Real _phi;
+  Real _psi;
+  Real _C;
+  Real _alpha;
+  Real _beta;
+  Real _k;
+
+  ADReal _pressure_tr;
+  ADReal _eqv_stress_tr;
+
+  usingSingleVarUpdateMembers;
+};

@@ -16,28 +16,46 @@
 
 #include "ADMaterial.h"
 
+#define usingViscoPlasticUpdateMembers                                                             \
+  usingMaterialMembers;                                                                            \
+  using VPViscoPlasticUpdate<compute_stage>::_abs_tol;                                             \
+  using VPViscoPlasticUpdate<compute_stage>::_rel_tol;                                             \
+  using VPViscoPlasticUpdate<compute_stage>::_max_its;                                             \
+  using VPViscoPlasticUpdate<compute_stage>::_eta_p;                                               \
+  using VPViscoPlasticUpdate<compute_stage>::_n;                                                   \
+  using VPViscoPlasticUpdate<compute_stage>::_yield_function;                                      \
+  using VPViscoPlasticUpdate<compute_stage>::_plastic_strain_incr
+
 template <ComputeStage>
-class VPViscoPlasticModel;
+class VPViscoPlasticUpdate;
 template <typename>
 class RankTwoTensorTempl;
 typedef RankTwoTensorTempl<Real> RankTwoTensor;
 typedef RankTwoTensorTempl<DualReal> DualRankTwoTensor;
 
-declareADValidParams(VPViscoPlasticModel);
+declareADValidParams(VPViscoPlasticUpdate);
 
 template <ComputeStage compute_stage>
-class VPViscoPlasticModel : public ADMaterial<compute_stage>
+class VPViscoPlasticUpdate : public ADMaterial<compute_stage>
 {
 public:
-  VPViscoPlasticModel(const InputParameters & parameters);
+  VPViscoPlasticUpdate(const InputParameters & parameters);
   void setQp(unsigned int qp);
   virtual void viscoPlasticUpdate(ADRankTwoTensor & stress,
-                                  const ADReal & K,
-                                  const ADReal & G,
+                                  const RankFourTensor & Cijkl,
                                   ADRankTwoTensor & elastic_strain_incr) = 0;
   void resetQpProperties() final {}
   void resetProperties() final {}
 
 protected:
+  Real _abs_tol;
+  Real _rel_tol;
+  unsigned int _max_its;
+  Real _eta_p;
+  Real _n;
+
+  ADMaterialProperty(Real) & _yield_function;
+  ADMaterialProperty(RankTwoTensor) & _plastic_strain_incr;
+
   usingMaterialMembers;
 };
