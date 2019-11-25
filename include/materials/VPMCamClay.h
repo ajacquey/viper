@@ -45,8 +45,22 @@ protected:
   virtual void postReturnMap() override;
   virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_v,
                                                     const ADReal & gamma_d) override;
-  virtual void
+  virtual ADReal
   calculateProjection(const ADReal & chi_v, const ADReal & chi_d, ADReal & chi_v0, ADReal & chi_d0);
+  virtual void calculateProjectionDerivV(const ADReal & chi_v,
+                                         const ADReal & chi_d,
+                                         ADReal & dchi_v0,
+                                         ADReal & dchi_d0);
+  virtual void calculateProjectionDerivD(const ADReal & chi_v,
+                                         const ADReal & chi_d,
+                                         ADReal & dchi_v0,
+                                         ADReal & dchi_d0);
+  virtual ADReal
+  calculateDirection(const ADReal & chi_v, const ADReal & chi_d, ADReal & ev, ADReal & ed);
+  virtual void updateDissipativeStress(const ADReal & gamma_v,
+                                       const ADReal & gamma_d,
+                                       ADReal & chi_v,
+                                       ADReal & chi_d);
 
   const Real _phi;
   const Real _pcr0;
