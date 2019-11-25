@@ -79,7 +79,7 @@ VPDruckerPrager<compute_stage>::reformPlasticStrainTensor(const ADReal & gamma_v
       (_eqv_stress_tr != 0.0) ? _stress_tr.deviatoric() / _eqv_stress_tr : ADRankTwoTensor();
 
   ADRankTwoTensor delta_gamma = 1.5 * gamma_vp * _dt * flow_dir;
-  delta_gamma.addIa(_beta * gamma_vp / 3.0);
+  delta_gamma.addIa(_beta * gamma_vp * _dt / 3.0);
 
   return delta_gamma;
 }

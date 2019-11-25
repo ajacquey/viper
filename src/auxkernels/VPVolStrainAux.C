@@ -12,37 +12,23 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#pragma once
+#include "VPVolStrainAux.h"
 
-#include "VPSingleVarUpdate.h"
+registerMooseObject("ViperApp", VPVolStrainAux);
 
-template <ComputeStage>
-class VPDruckerPrager;
-
-declareADValidParams(VPDruckerPrager);
-
-template <ComputeStage compute_stage>
-class VPDruckerPrager : public VPSingleVarUpdate<compute_stage>
+template <>
+InputParameters
+validParams<VPVolStrainAux>()
 {
-public:
-  VPDruckerPrager(const InputParameters & parameters);
+  InputParameters params = validParams<VPStrainAuxBase>();
+  params.addClassDescription("Calculates the volumetric strain of the given tensor.");
+  return params;
+}
 
-protected:
-  virtual ADReal yieldFunction(const ADReal & gamma_vp) override;
-  virtual ADReal yieldFunctionDeriv(const ADReal & gamma_vp) override;
-  virtual void preReturnMap() override;
-  virtual void postReturnMap() override;
-  virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_vp) override;
+VPVolStrainAux::VPVolStrainAux(const InputParameters & parameters) : VPStrainAuxBase(parameters) {}
 
-  const Real _phi;
-  const Real _psi;
-  const Real _C;
-  Real _alpha;
-  Real _beta;
-  Real _k;
-
-  ADReal _pressure_tr;
-  ADReal _eqv_stress_tr;
-
-  usingSingleVarUpdateMembers;
-};
+Real
+VPVolStrainAux::computeValue()
+{
+  return _u_old[_qp] + (*_strain_incr)[_qp].trace();
+}

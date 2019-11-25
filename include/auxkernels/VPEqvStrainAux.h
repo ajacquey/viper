@@ -14,35 +14,18 @@
 
 #pragma once
 
-#include "VPSingleVarUpdate.h"
+#include "VPStrainAuxBase.h"
 
-template <ComputeStage>
-class VPDruckerPrager;
+class VPEqvStrainAux;
 
-declareADValidParams(VPDruckerPrager);
+template <>
+InputParameters validParams<VPEqvStrainAux>();
 
-template <ComputeStage compute_stage>
-class VPDruckerPrager : public VPSingleVarUpdate<compute_stage>
+class VPEqvStrainAux : public VPStrainAuxBase
 {
 public:
-  VPDruckerPrager(const InputParameters & parameters);
+  VPEqvStrainAux(const InputParameters & parameters);
 
 protected:
-  virtual ADReal yieldFunction(const ADReal & gamma_vp) override;
-  virtual ADReal yieldFunctionDeriv(const ADReal & gamma_vp) override;
-  virtual void preReturnMap() override;
-  virtual void postReturnMap() override;
-  virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_vp) override;
-
-  const Real _phi;
-  const Real _psi;
-  const Real _C;
-  Real _alpha;
-  Real _beta;
-  Real _k;
-
-  ADReal _pressure_tr;
-  ADReal _eqv_stress_tr;
-
-  usingSingleVarUpdateMembers;
+  virtual Real computeValue() override;
 };

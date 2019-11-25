@@ -37,6 +37,11 @@ defineADValidParams(
     params.addRequiredRangeCheckedParam<Real>("shear_modulus",
                                               "shear_modulus > 0.0",
                                               "The shear modulus of the material.");
+    // Initial stress
+    params.addParam<std::vector<Real>>(
+        "initial_stress",
+        std::vector<Real>(3, 0.0),
+        "The initial stress principal components (negative in compression).");
     // Visco-Plastic model
     params.addParam<MaterialName>("viscoplastic_model",
                                   "The material object to use for the viscoplastic correction.");
@@ -54,6 +59,8 @@ VPMechMaterial<compute_stage>::VPMechMaterial(const InputParameters & parameters
     // Elastic moduli parameters
     _bulk_modulus(getParam<Real>("bulk_modulus")),
     _shear_modulus(getParam<Real>("shear_modulus")),
+    // Initial stress
+    _initial_stress(getParam<std::vector<Real>>("initial_stress")),
     // Visco-Plastic model
     _has_vp(isParamValid("viscoplastic_model")),
     // Strain properties
@@ -67,6 +74,9 @@ VPMechMaterial<compute_stage>::VPMechMaterial(const InputParameters & parameters
   if (getParam<bool>("use_displaced_mesh"))
     paramError("use_displaced_mesh",
                "The strain and stress calculator needs to run on the undisplaced mesh.");
+
+  if (_initial_stress.size() != 3)
+    paramError("initial_stress", "You need to provide 3 components for the initial stress.");
 }
 
 template <ComputeStage compute_stage>
@@ -122,6 +132,9 @@ void
 VPMechMaterial<compute_stage>::initQpStatefulProperties()
 {
   _stress[_qp].zero();
+  RankTwoTensor init_stress_tensor = RankTwoTensor();
+  init_stress_tensor.fillFromInputVector(_initial_stress);
+  _stress[_qp] += init_stress_tensor;
 }
 
 template <ComputeStage compute_stage>

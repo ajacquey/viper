@@ -1,7 +1,17 @@
 [Tests]
-  [./uniaxial]
+  [./drucker_prager_uniaxial]
     type = 'Exodiff'
-    input = 'uniaxial.i'
-    exodiff = 'uniaxial_out.e'
+    input = 'drucker_prager_uniaxial.i'
+    exodiff = 'drucker_prager_uniaxial_out.e'
+  [../]
+  [./modified_cam_clay_compression]
+    type = 'Exodiff'
+    input = 'modified_cam_clay_comp.i'
+    exodiff = 'modified_cam_clay_comp_out.e'
+  [../]
+  [./modified_cam_clay_dilation]
+    type = 'Exodiff'
+    input = 'modified_cam_clay_dila.i'
+    exodiff = 'modified_cam_clay_dila_out.e'
   [../]
 []

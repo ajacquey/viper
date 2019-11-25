@@ -48,7 +48,7 @@ VPViscoPlasticUpdate<compute_stage>::VPViscoPlasticUpdate(const InputParameters 
     _eta_p(getParam<Real>("plastic_viscosity")),
     _n(getParam<Real>("exponent")),
     _yield_function(declareADProperty<Real>("yield_function")),
-    _plastic_strain_incr(declareADProperty<RankTwoTensor>("plastic_strain_incr"))
+    _plastic_strain_incr(declareADProperty<RankTwoTensor>("plastic_strain_increment"))
 {
 }
 

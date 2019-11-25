@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/viper-dbg",
-            "args": ["-i", "test/tests/kernels/viscoplastic/uniaxial.i"],
+            "args": ["-i", "test/tests/viscoplastic/modified_cam_clay.i"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

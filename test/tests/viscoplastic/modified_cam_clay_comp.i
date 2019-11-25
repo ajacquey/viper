@@ -1,15 +1,15 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
-  nx = 4
-  ny = 4
-  nz = 4
-  xmin = 0
-  xmax = 1
-  ymin = 0
-  ymax = 1
+  nx = 8
+  ny = 8
+  nz = 1
+  xmin = -0.5
+  xmax = 0.5
+  ymin = -0.5
+  ymax = 0.5
   zmin = 0
-  zmax = 1
+  zmax = 0.1
 []
 
 [Variables]
@@ -46,6 +46,22 @@
 []
 
 [AuxVariables]
+  [./pressure]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./dev_stress]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./plastic_vol_strain]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./plastic_eqv_strain]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./yield]
     order = CONSTANT
     family = MONOMIAL
@@ -53,36 +69,53 @@
 []
 
 [AuxKernels]
+  [./pressure_aux]
+    type = VPPressureAux
+    variable = pressure
+    execute_on = 'TIMESTEP_END'
+  [../]
+  [./dev_stress_aux]
+    type = VPVonMisesStressAux
+    variable = dev_stress
+    execute_on = 'TIMESTEP_END'
+  [../]
+  [./plastic_vol_strain_aux]
+    type = VPVolStrainAux
+    variable = plastic_vol_strain
+    strain_type = 'plastic'
+    execute_on = 'TIMESTEP_END'
+  [../]
+  [./plastic_eqv_strain_aux]
+    type = VPEqvStrainAux
+    variable = plastic_eqv_strain
+    strain_type = 'plastic'
+    execute_on = 'TIMESTEP_END'
+  [../]
   [./yield_aux]
     type = MaterialRealAux
     variable = yield
     property = yield_function
+    execute_on = 'TIMESTEP_END'
   [../]
 []
 
 [BCs]
-  [./no_x_left]
-    type = PresetBC
-    variable = disp_x
-    boundary = left
-    value = 0.0
-  [../]
-  [./load_x_right]
+  [./x_compression]
     type = FunctionPresetBC
     variable = disp_x
-    boundary = right
-    function = '-1.0e-05*t'
+    boundary = 'left right'
+    function = '-1.0e-05*x*t'
   [../]
-  [./no_y]
-    type = PresetBC
+  [./y_extension]
+    type = FunctionPresetBC
     variable = disp_y
-    boundary = 'bottom'
-    value = 0.0
+    boundary = 'bottom top'
+    function = '1.0e-05*y*t'
   [../]
-  [./no_z_back]
+  [./no_z]
     type = PresetBC
     variable = disp_z
-    boundary = 'back'
+    boundary = 'front back'
     value = 0.0
   [../]
 []
@@ -93,12 +126,13 @@
     displacements = 'disp_x disp_y disp_z'
     bulk_modulus = 2.0e+03
     shear_modulus = 2.0e+03
-    viscoplastic_model = 'drucker_prager_mat'
+    initial_stress = '-7.0 -7.0 -7.0'
+    viscoplastic_model = 'mod_cam_clay_mat'
   [../]
-  [./drucker_prager_mat]
-    type = VPDruckerPrager
-    friction_angle = 0.0
-    cohesion = 0.5773502692
+  [./mod_cam_clay_mat]
+    type = VPMCamClay
+    friction_angle = 30.0
+    critical_pressure = 1.0e+01
     plastic_viscosity = 2.0e+04
   [../]
 []

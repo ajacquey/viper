@@ -10,7 +10,7 @@
                 "/System/Library/Frameworks",
                 "/Library/Frameworks"
             ],
-            "compilerPath": "/opt/moose/llvm-8.0.0/bin/clang",
+            "compilerPath": "/opt/moose/llvm-9.0.0-rc6/bin/clang",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64",

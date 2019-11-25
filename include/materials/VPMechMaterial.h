@@ -59,6 +59,9 @@ protected:
   const Real _bulk_modulus;
   const Real _shear_modulus;
 
+  // Initial stress
+  const std::vector<Real> _initial_stress;
+
   // Viscoplastoc model
   const bool _has_vp;
 
