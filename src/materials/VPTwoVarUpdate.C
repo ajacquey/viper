@@ -69,7 +69,7 @@ VPTwoVarUpdate<compute_stage>::viscoPlasticUpdate(ADRankTwoTensor & stress,
   _plastic_strain_incr[_qp] = reformPlasticStrainTensor(gamma_v, gamma_d);
   elastic_strain_incr -= _plastic_strain_incr[_qp];
   stress -= Cijkl * _plastic_strain_incr[_qp];
-  postReturnMap();
+  postReturnMap(gamma_v, gamma_d);
 }
 
 template <ComputeStage compute_stage>

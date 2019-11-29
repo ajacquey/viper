@@ -60,7 +60,7 @@ protected:
   virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_v,
                                                     const ADReal & gamma_d) = 0;
   virtual void preReturnMap() = 0;
-  virtual void postReturnMap() = 0;
+  virtual void postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d) = 0;
 
   ADRankTwoTensor _stress_tr;
   ADReal _K;

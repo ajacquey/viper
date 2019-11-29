@@ -38,9 +38,21 @@ VPMCamClay<compute_stage>::VPMCamClay(const InputParameters & parameters)
   : VPTwoVarUpdate<compute_stage>(parameters),
     _phi(getParam<Real>("friction_angle")),
     _pcr0(getParam<Real>("critical_pressure")),
-    _L(getParam<Real>("critical_pressure_hardening"))
+    _L(getParam<Real>("critical_pressure_hardening")),
+    _has_hardening(_L > 0.0),
+    _intnl(_has_hardening ? &declareADProperty<Real>("volumetric_plastic_strain") : nullptr),
+    _intnl_old(_has_hardening ? &getMaterialPropertyOld<Real>("volumetric_plastic_strain")
+                              : nullptr)
 {
   _alpha = std::sqrt(3.0) * std::sin(_phi * libMesh::pi / 180.0);
+}
+
+template <ComputeStage compute_stage>
+void
+VPMCamClay<compute_stage>::initQpStatefulProperties()
+{
+  if (_has_hardening)
+    (*_intnl)[_qp] = 0.0;
 }
 
 template <ComputeStage compute_stage>
@@ -50,10 +62,8 @@ VPMCamClay<compute_stage>::yieldFunction(const ADReal & gamma_v, const ADReal & 
 
   ADReal chi_v = 0.0, chi_d = 0.0;
   updateDissipativeStress(gamma_v, gamma_d, chi_v, chi_d);
-  ADReal A = _A_tr;
-  ADReal B = _B_tr;
 
-  return Utility::pow<2>(chi_v / A) + Utility::pow<2>(chi_d / B) - 1.0;
+  return Utility::pow<2>(chi_v / _A) + Utility::pow<2>(chi_d / _B) - 1.0;
 }
 
 template <ComputeStage compute_stage>
@@ -85,7 +95,7 @@ VPMCamClay<compute_stage>::overStressDerivV(const ADReal & gamma_v,
   updateDissipativeStress(gamma_v, gamma_d, chi_v, chi_d);
 
   // Dissipative stress derivatives
-  ADReal dchi_v = -_K * _dt;
+  ADReal dchi_v = -_K * _dt - 0.5 * _pcr * _L * _dt;
   // + 0.5 * _pc_tr * (1.0 - std::exp(_L * gamma_v * _dt));
   ADReal dchi_d = 0.0;
 
@@ -128,9 +138,15 @@ VPMCamClay<compute_stage>::preReturnMap()
   _pressure_tr = -_stress_tr.trace() / 3.0;
   _eqv_stress_tr = std::sqrt(1.5) * _stress_tr.deviatoric().L2norm();
 
-  _pcr_tr = _pcr0; // * std::exp(-_L * _plastic_strain_old[_qp].trace());
-  _A_tr = 0.5 * _pcr_tr;
-  _B_tr = _alpha * 0.5 * _pcr_tr;
+  _pcr_tr = _pcr0;
+  if (_has_hardening)
+  {
+    (*_intnl)[_qp] = (*_intnl_old)[_qp];
+    _pcr_tr = _pcr0 * std::exp(-_L * (*_intnl_old)[_qp]);
+  }
+
+  _A = 0.5 * _pcr_tr;
+  _B = _alpha * 0.5 * _pcr_tr;
 
   _chi_v_tr = _pressure_tr - 0.5 * _pcr_tr;
   _chi_d_tr = _eqv_stress_tr;
@@ -138,8 +154,10 @@ VPMCamClay<compute_stage>::preReturnMap()
 
 template <ComputeStage compute_stage>
 void
-VPMCamClay<compute_stage>::postReturnMap()
+VPMCamClay<compute_stage>::postReturnMap(const ADReal & gamma_v, const ADReal & /*gamma_d*/)
 {
+  if (_has_hardening)
+    (*_intnl)[_qp] = (*_intnl_old)[_qp] + gamma_v * _dt;
 }
 
 template <ComputeStage compute_stage>
@@ -165,10 +183,8 @@ VPMCamClay<compute_stage>::calculateProjection(const ADReal & chi_v,
   // Directions
   ADReal ev = 0.0, ed = 0.0;
   calculateDirection(chi_v, chi_d, ev, ed);
-  ADReal A = _A_tr;
-  ADReal B = _B_tr;
 
-  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / A) + Utility::pow<2>(ed / B)));
+  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / _A) + Utility::pow<2>(ed / _B)));
 
   chi_v0 = rho_0 * ev;
   chi_d0 = rho_0 * ed;
@@ -186,21 +202,18 @@ VPMCamClay<compute_stage>::calculateProjectionDerivV(const ADReal & chi_v,
   // Directions
   ADReal ev = 0.0, ed = 0.0;
   ADReal rho_tr = calculateDirection(chi_v, chi_d, ev, ed);
-  // Yield parameters
-  ADReal A = _A_tr;
-  ADReal B = _B_tr;
   // Dissipative stress derivative
-  ADReal dchi_v = -_K * _dt;
+  ADReal dchi_v = -_K * _dt - 0.5 * _pcr * _L * _dt;
 
-  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / A) + Utility::pow<2>(ed / B)));
+  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / _A) + Utility::pow<2>(ed / _B)));
 
   dchi_v0 = rho_0 / rho_tr *
-            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(B) - 1.0 / Utility::pow<2>(A)) *
+            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
                  Utility::pow<2>(ev) +
              1.0) *
             Utility::pow<2>(ed) * dchi_v;
   dchi_d0 = rho_0 / rho_tr *
-            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(B) - 1.0 / Utility::pow<2>(A)) *
+            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
                  Utility::pow<2>(ed) -
              1.0) *
             ev * ed * dchi_v;
@@ -216,21 +229,18 @@ VPMCamClay<compute_stage>::calculateProjectionDerivD(const ADReal & chi_v,
   // Directions
   ADReal ev = 0.0, ed = 0.0;
   ADReal rho_tr = calculateDirection(chi_v, chi_d, ev, ed);
-  // Yield parameters
-  ADReal A = _A_tr;
-  ADReal B = _B_tr;
   // Dissipative stress derivative
   ADReal dchi_d = -3.0 * _G * _dt;
 
-  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / A) + Utility::pow<2>(ed / B)));
+  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / _A) + Utility::pow<2>(ed / _B)));
 
   dchi_v0 = rho_0 / rho_tr *
-            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(A) - 1.0 / Utility::pow<2>(B)) *
+            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_A) - 1.0 / Utility::pow<2>(_B)) *
                  Utility::pow<2>(ev) -
              1.0) *
             ev * ed * dchi_d;
   dchi_d0 = rho_0 / rho_tr *
-            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(A) - 1.0 / Utility::pow<2>(B)) *
+            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_A) - 1.0 / Utility::pow<2>(_B)) *
                  Utility::pow<2>(ed) +
              1.0) *
             Utility::pow<2>(ev) * dchi_d;
@@ -260,6 +270,11 @@ VPMCamClay<compute_stage>::updateDissipativeStress(const ADReal & gamma_v,
   // Here we calculate the yield function in the dissipative stress space:
   // chi_v = pressure - 0.5 * pc
   // chi_d = eqv_stress
-  chi_v = _chi_v_tr - _K * gamma_v * _dt; // + 0.5 * _pc_tr * (1.0 - std::exp(_L * gamma_v * _dt));
+  chi_v = _chi_v_tr - _K * gamma_v * _dt + 0.5 * _pcr_tr * (1.0 - std::exp(_L * gamma_v * _dt));
   chi_d = _chi_d_tr - 3.0 * _G * gamma_d * _dt;
+
+  // Update yield parameters
+  _pcr = _pcr_tr * std::exp(_L * gamma_v * _dt);
+  _A = 0.5 * _pcr;
+  _B = _alpha * 0.5 * _pcr;
 }

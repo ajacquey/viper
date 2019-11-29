@@ -28,6 +28,7 @@ public:
   VPMCamClay(const InputParameters & parameters);
 
 protected:
+  virtual void initQpStatefulProperties() override;
   virtual ADReal yieldFunction(const ADReal & gamma_v, const ADReal & gamma_d) override;
   virtual void overStress(const ADReal & gamma_v,
                           const ADReal & gamma_d,
@@ -42,7 +43,7 @@ protected:
                                 ADReal & over_v_d,
                                 ADReal & over_d_d) override;
   virtual void preReturnMap() override;
-  virtual void postReturnMap() override;
+  virtual void postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d) override;
   virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_v,
                                                     const ADReal & gamma_d) override;
   virtual ADReal
@@ -65,17 +66,22 @@ protected:
   const Real _phi;
   const Real _pcr0;
   const Real _L;
+  const bool _has_hardening;
+  ADMaterialProperty(Real) * _intnl;
+  const MaterialProperty<Real> * _intnl_old;
   Real _alpha;
 
   ADReal _pressure_tr;
   ADReal _eqv_stress_tr;
 
   ADReal _pcr_tr;
-  ADReal _A_tr;
-  ADReal _B_tr;
+  ADReal _A;
+  ADReal _B;
 
   ADReal _chi_v_tr;
   ADReal _chi_d_tr;
+
+  ADReal _pcr;
 
   usingTwoVarUpdateMembers;
 };
