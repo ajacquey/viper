@@ -101,19 +101,22 @@
 
 [BCs]
   [./x_compression]
-    type = FunctionPresetBC
+    type = FunctionDirichletBC
+    preset = true
     variable = disp_x
     boundary = 'left right'
     function = '-1.0e-05*x*t'
   [../]
   [./y_extension]
-    type = FunctionPresetBC
+    type = FunctionDirichletBC
+    preset = true
     variable = disp_y
     boundary = 'bottom top'
     function = '1.0e-05*y*t'
   [../]
   [./no_z]
-    type = PresetBC
+    type = DirichletBC
+    preset = true
     variable = disp_z
     boundary = 'front back'
     value = 0.0
@@ -131,6 +134,7 @@
   [../]
   [./mod_cam_clay_mat]
     type = VPMCamClayBis
+    projection_method = ray_intersection # ray_intersection or gradient_potential
     #friction_angle = 30.0
     critical_state_line_slope = 1.0
     critical_pressure = 1.0e+01

@@ -49,9 +49,13 @@ protected:
   const Real _M;
   const Real _pc;
   const Real _eps_dot_0;
+  const unsigned int _projection_method;
+  const Real _proj_abs_tol; // for gradient_potential method only
+  const unsigned int _proj_max_its; // for gradient_potential method only
 
   ADReal _p_tr;
   ADReal _q_tr;
+  ADReal _t_y;
 
   usingTwoVarUpdateBisMembers;
 };

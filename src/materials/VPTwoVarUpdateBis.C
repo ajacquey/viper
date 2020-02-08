@@ -110,8 +110,8 @@ VPTwoVarUpdateBis<compute_stage>::returnMap(ADReal & p, ADReal & q)
     /*std::cout << "\tNR, iter=" << iter ;
     ADReal abs_tol = std::abs(res);
     ADReal rel_tol = std::abs(res / res_ini);
-    std::cout << ", p="  << p << ",q="  << q << ", abs_tol=" << abs_tol << ",
-      rel_tol=" << rel_tol << std::endl; */
+    std::cout << ", p="  << p << ",q="  << q << ", abs_tol=" << abs_tol <<
+        ", rel_tol=" << rel_tol << std::endl;*/
 
     if ((std::abs(res) <= _abs_tol) || (std::abs(res / res_ini) <= _rel_tol))
     {
