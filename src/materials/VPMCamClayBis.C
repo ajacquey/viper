@@ -64,24 +64,29 @@ template <ComputeStage compute_stage>
 void
 VPMCamClayBis<compute_stage>::residual(const ADReal & p,
                                        const ADReal & q,
+                                       const ADReal & p_y,
+                                       const ADReal & q_y,
                                        ADReal & resv,
                                        ADReal & resd)
 {
-  ADReal p_y = p, q_y = q;
-  calculateProjection(p, q, p_y, q_y);
-
   ADReal gamma_v, gamma_d;
-  gamma_v = (_p_tr - p) / (_K * _dt);
-  gamma_d = (_q_tr - q) / (3 * _G * _dt);
+  gamma_v = std::abs(_p_tr - p) / (_K * _dt);
+  gamma_d = std::abs(_q_tr - q) / (3 * _G * _dt);
 
-  resv = p - p_y - _eta_p * std::pow(gamma_v, 1.0 / _n);
-  resd = q - q_y - _eta_p * std::pow(gamma_d, 1.0 / _n);
+  resv = std::abs(p - p_y);
+  if (gamma_v != 0.0)
+    resv -= _eta_p * std::pow(gamma_v, 1.0 / _n);
+  resd = std::abs(q - q_y);
+  if (gamma_d != 0.0)
+    resd -= _eta_p * std::pow(gamma_d, 1.0 / _n);
 }
 
 template <ComputeStage compute_stage>
 void
 VPMCamClayBis<compute_stage>::jacobian(const ADReal & p,
                                        const ADReal & q,
+                                       const ADReal & p_y,
+                                       const ADReal & q_y,
                                        ADReal & jacvv,
                                        ADReal & jacdd,
                                        ADReal & jacvd,
@@ -98,16 +103,6 @@ VPMCamClayBis<compute_stage>::jacobian(const ADReal & p,
     {
       ADReal x5 = (p - 0.5 * _pc);
       ADReal x1 = std::abs(_pc) / (2 * std::pow(Utility::pow<2>(q / _M) + x5 * x5, 1.5));
-      ADReal x2 = (_p_tr - p) / (_K * _eps_dot_0 * _dt);
-      if ((x2 == 0.0) || (_n == 1)) // somehow std::pow(0, 0) returns (1,{nan,nan,nan,...
-        x2 = 1.0;
-      else
-        x2 = std::pow(x2, 1.0 / _n - 1.0);
-      ADReal x7 = (_q_tr - q) / (3 * _G * _eps_dot_0 * _dt);
-      if ((x7 == 0.0) || (_n == 1)) // somehow std::pow(0, 0) returns (1,{nan,nan,nan,...
-        x7 = 1.0;
-      else
-        x7 = std::pow(x7, 1.0 / _n - 1.0);
       dpy_dp = x1 * q * q / (_M * _M);
       dpy_dq = -x1 * q * x5 / (_M * _M);
       dqy_dp = x1 * q * x5;
@@ -151,22 +146,18 @@ VPMCamClayBis<compute_stage>::jacobian(const ADReal & p,
 
   // Second, compute jacobians
   ADReal x1 = 3 * _G * _eps_dot_0 * _dt;
-  ADReal x2 = (_q_tr - q) / x1;
-  if ((x2 == 0.0) || (_n == 1)) // somehow std::pow(0, 0) returns (1,{nan,nan,nan,...
-    x2 = 1.0;
-  else
+  ADReal x2 = std::abs(_q_tr - q) / x1;
+  if (x2 > 0.0)
     x2 = std::pow(x2, 1.0 / _n - 1.0);
-  jacdd = 1.0 - dqy_dq + x2 / (_n * x1);
-  jacdv = -dqy_dp;
+  jacdd = (1.0 - dqy_dq) * (q > q_y ? 1 : -1) + x2 * (_q_tr > q ? 1 : -1) / (_n * x1);
+  jacdv = -dqy_dp * (q > q_y ? 1 : -1);
 
   ADReal x3 = _K * _eps_dot_0 * _dt;
-  ADReal x4 = (_p_tr - p) / x3;
-  if ((x4 == 0.0) || (_n == 1)) // somehow std::pow(0, 0) returns (1,{nan,nan,nan,...
-    x4 = 1.0;
-  else
+  ADReal x4 = std::abs(_p_tr - p) / x3;
+  if (x4 > 0.0)
     x4 = std::pow(x4, 1.0 / _n - 1.0);
-  jacvv = 1.0 - dpy_dp + x4 / (_n * x3);
-  jacvd = -dpy_dq;
+  jacvv = (1.0 - dpy_dp) * (p > p_y ? 1 : -1) + x4  * (_p_tr > p ? 1 : -1) / (_n * x3);
+  jacvd = -dpy_dq * (p > p_y ? 1 : -1);
 }
 
 template <ComputeStage compute_stage>
@@ -253,7 +244,7 @@ VPMCamClayBis<compute_stage>::calculateProjection(const ADReal & p,
           {
             throw MooseException(
               "VPMCamClayBis: maximum number of iterations exceeded in "\
-              "'calculateProjection'!\n phi: ", phi, "\n");
+              "'calculateProjection'!\n iter:", iter, ", phi: ", phi, "\n");
           }
           p_y = 0.5 * _pc + (p - 0.5 * _pc) * std::exp(-2 * _t_y);
           q_y = q * std::exp(-2 * _t_y / M2);

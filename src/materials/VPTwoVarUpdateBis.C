@@ -14,6 +14,7 @@
 
 #include "VPTwoVarUpdateBis.h"
 #include "ElasticityTensorTools.h"
+//#include <unistd.h> // for debugging with usleep(10000000); // in microseconds
 
 defineADValidParams(
     VPTwoVarUpdateBis,
@@ -77,18 +78,20 @@ template <ComputeStage compute_stage>
 void
 VPTwoVarUpdateBis<compute_stage>::returnMap(ADReal & p, ADReal & q)
 {
-  //std::cout << "\tEnter RMap, p="  << p << ",q="  << q << std::endl;
+  //std::cout << "\tEnter RMap, p="  << p << "\n\t\t q="  << q << std::endl;
 
   // Initial residual
   ADReal resv_ini = 0.0, resd_ini = 0.0;
-  residual(p, q, resv_ini, resd_ini);
+  ADReal p_y = p, q_y = q;
+  calculateProjection(p, q, p_y, q_y);
+  residual(p, q, p_y, q_y, resv_ini, resd_ini);
   ADReal res_ini = std::sqrt(Utility::pow<2>(resv_ini) + Utility::pow<2>(resd_ini));
   ADReal resv = resv_ini, resd = resd_ini;
   ADReal res = res_ini;
 
   // Initial jacobian
   ADReal jacvv = 0.0, jacdd = 0.0, jacvd = 0.0, jacdv = 0.0;
-  jacobian(p, q, jacvv, jacdd, jacvd, jacdv);
+  jacobian(p, q, p_y, q_y, jacvv, jacdd, jacvd, jacdv);
 
   // Useful stuff
   ADReal jac_full = jacvv * jacdd - jacvd * jacdv;
@@ -100,8 +103,10 @@ VPTwoVarUpdateBis<compute_stage>::returnMap(ADReal & p, ADReal & q)
   {
     p -= resv_full / jac_full;
     q -= resd_full / jac_full;
-    residual(p, q, resv, resd);
-    jacobian(p, q, jacvv, jacdd, jacvd, jacdv);
+    q = std::max(q, 0.0);
+    calculateProjection(p, q, p_y, q_y);
+    residual(p, q, p_y, q_y, resv, resd);
+    jacobian(p, q, p_y, q_y, jacvv, jacdd, jacvd, jacdv);
     jac_full = jacvv * jacdd - jacvd * jacdv;
     resv_full = jacdd * resv - jacvd * resd;
     resd_full = jacvv * resd - jacdv * resv;

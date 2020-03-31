@@ -31,10 +31,14 @@ protected:
   virtual ADReal yieldFunction(const ADReal & gamma_v, const ADReal & gamma_d) override;
   virtual void residual(const ADReal & p,
                         const ADReal & q,
+                        const ADReal & p_y,
+                        const ADReal & q_y,
                         ADReal & resv,
                         ADReal & resd) override;
   virtual void jacobian(const ADReal & p,
                         const ADReal & q,
+                        const ADReal & p_y,
+                        const ADReal & q_y,
                         ADReal & jacvv,
                         ADReal & jacdd,
                         ADReal & jacvd,
@@ -43,8 +47,10 @@ protected:
   virtual void postReturnMap(const ADReal & p, const ADReal & q) override;
   virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & p,
                                                     const ADReal & q) override;
-  virtual void
-  calculateProjection(const ADReal & p, const ADReal & q, ADReal & p_y, ADReal & q_y);
+  virtual void calculateProjection(const ADReal & p,
+                                   const ADReal & q,
+                                   ADReal & p_y,
+                                   ADReal & q_y) override;
 
   const Real _M;
   const Real _pc;

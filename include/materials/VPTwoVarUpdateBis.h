@@ -40,10 +40,14 @@ protected:
   virtual void returnMap(ADReal & p, ADReal & q);
   virtual void residual(const ADReal & p,
                         const ADReal & q,
+                        const ADReal & p_y,
+                        const ADReal & q_y,
                         ADReal & resv,
                         ADReal & resd) = 0;
   virtual void jacobian(const ADReal & p,
                         const ADReal & q,
+                        const ADReal & p_y,
+                        const ADReal & q_y,
                         ADReal & jacvv,
                         ADReal & jacdd,
                         ADReal & jacvd,
@@ -53,6 +57,10 @@ protected:
                                                     const ADReal & q) = 0;
   virtual void preReturnMap() = 0;
   virtual void postReturnMap(const ADReal & p, const ADReal & q) = 0;
+  virtual void calculateProjection(const ADReal & p,
+                                   const ADReal & q,
+                                   ADReal & p_y,
+                                   ADReal & q_y) = 0;
 
   ADRankTwoTensor _stress_tr;
   ADReal _K;
